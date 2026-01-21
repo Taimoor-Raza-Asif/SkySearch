@@ -32,6 +32,8 @@ const FilterPanel = () => {
     stops: true,
     price: true,
     airlines: true,
+    departureTime: true,
+    duration: true,
   });
 
   const {
@@ -103,9 +105,24 @@ const FilterPanel = () => {
         {activeFilterCount() > 0 && (
           <Button
             size="small"
+            variant="outlined"
             startIcon={<ClearAllIcon />}
             onClick={resetFilters}
-            sx={{ textTransform: 'none' }}
+            sx={{ 
+              textTransform: 'none',
+              borderColor: 'error.main',
+              color: 'error.main',
+              px: 2,
+              py: 0.5,
+              borderRadius: 2,
+              fontWeight: 600,
+              fontSize: '0.8rem',
+              '&:hover': {
+                bgcolor: 'error.main',
+                color: 'white',
+                borderColor: 'error.main',
+              },
+            }}
           >
             Clear all
           </Button>
@@ -205,7 +222,7 @@ const FilterPanel = () => {
               onChange={handlePriceChange}
               min={priceStats.min || 0}
               max={priceStats.max || 10000}
-              step={50}
+              step={Math.max(1, Math.floor((priceStats.max - priceStats.min) / 100))}
               valueLabelDisplay="auto"
               valueLabelFormat={(value) => formatPrice(value)}
               sx={{ mt: 1 }}
@@ -307,25 +324,15 @@ const FilterPanel = () => {
           </IconButton>
         </Box>
         <Collapse in={expandedSections.departureTime !== false}>
-          <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1, mt: 1 }}>
+          <Box sx={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 1, mt: 1 }}>
             {[
               { label: '🌅 Morning', value: 'morning', range: '6am - 12pm' },
               { label: '☀️ Afternoon', value: 'afternoon', range: '12pm - 6pm' },
               { label: '🌆 Evening', value: 'evening', range: '6pm - 12am' },
               { label: '🌙 Night', value: 'night', range: '12am - 6am' },
             ].map((time) => (
-              <Chip
+              <Box
                 key={time.value}
-                label={
-                  <Box sx={{ textAlign: 'center' }}>
-                    <Typography variant="caption" sx={{ display: 'block', fontWeight: 600 }}>
-                      {time.label}
-                    </Typography>
-                    <Typography variant="caption" sx={{ fontSize: '0.6rem', opacity: 0.7 }}>
-                      {time.range}
-                    </Typography>
-                  </Box>
-                }
                 onClick={() => {
                   const current = filters.departureTimeSlots || [];
                   const newSlots = current.includes(time.value)
@@ -334,21 +341,32 @@ const FilterPanel = () => {
                   updateFilters({ departureTimeSlots: newSlots });
                 }}
                 sx={{
-                  py: 2,
-                  height: 'auto',
+                  py: 1.5,
+                  px: 1,
+                  textAlign: 'center',
+                  borderRadius: 2,
+                  cursor: 'pointer',
                   bgcolor: (filters.departureTimeSlots || []).includes(time.value)
                     ? 'primary.main'
                     : 'action.hover',
                   color: (filters.departureTimeSlots || []).includes(time.value)
                     ? 'white'
                     : 'text.primary',
+                  transition: 'all 0.2s ease',
                   '&:hover': {
                     bgcolor: (filters.departureTimeSlots || []).includes(time.value)
                       ? 'primary.dark'
                       : 'action.selected',
                   },
                 }}
-              />
+              >
+                <Typography variant="caption" sx={{ display: 'block', fontWeight: 600, fontSize: '0.8rem' }}>
+                  {time.label}
+                </Typography>
+                <Typography variant="caption" sx={{ fontSize: '0.65rem', opacity: 0.7 }}>
+                  {time.range}
+                </Typography>
+              </Box>
             ))}
           </Box>
         </Collapse>

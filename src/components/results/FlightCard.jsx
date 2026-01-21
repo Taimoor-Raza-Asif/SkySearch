@@ -38,25 +38,33 @@ const FlightCard = ({ flight, dictionaries }) => {
     return dictionaries?.carriers?.[code] || AIRLINE_LOGOS[code] || code;
   };
 
-  // Parse baggage information from Amadeus API response
-  const getBaggageInfo = () => {
+  // Parse baggage and fare information from Amadeus API response
+  const getFareInfo = () => {
     const travelerPricing = flight.travelerPricings?.[0];
     if (!travelerPricing?.fareDetailsBySegment?.[0]) {
-      return { carryOn: true, checkedBags: 0, checkedWeight: null };
+      return { 
+        carryOn: true, 
+        checkedBags: 0, 
+        checkedWeight: null,
+        cabin: 'ECONOMY',
+        brandedFare: null,
+      };
     }
     
     const fareDetails = travelerPricing.fareDetailsBySegment[0];
     const includedBags = fareDetails.includedCheckedBags;
     
     return {
-      carryOn: true, // Carry-on is generally included on all flights
+      carryOn: true, // Most airlines include carry-on
       checkedBags: includedBags?.quantity || 0,
       checkedWeight: includedBags?.weight ? `${includedBags.weight}${includedBags.weightUnit || 'kg'}` : null,
-      cabin: fareDetails.cabin || 'ECONOMY',
+      cabin: fareDetails.cabin || 'ECONOMY', // FROM API: ECONOMY, PREMIUM_ECONOMY, BUSINESS, FIRST
+      brandedFare: fareDetails.brandedFare || null, // FROM API: fare brand name if available
+      fareClass: fareDetails.class || null, // FROM API: booking class
     };
   };
 
-  const baggageInfo = getBaggageInfo();
+  const fareInfo = getFareInfo();
 
   // Mobile-optimized itinerary rendering
   const renderMobileItinerary = (itinerary, label) => {
@@ -547,7 +555,7 @@ const FlightCard = ({ flight, dictionaries }) => {
           transition: 'all 0.3s',
         }}
       >
-        {/* CO2 Emissions */}
+        {/* CO2 Emissions - Estimated */}
         <Box
           sx={{
             display: 'flex',
@@ -563,7 +571,10 @@ const FlightCard = ({ flight, dictionaries }) => {
         >
           <Typography sx={{ fontSize: '20px', mb: 0.5 }}>🌱</Typography>
           <Typography variant="caption" fontWeight={700} color="success.main">
-            {Math.floor(150 + Math.random() * 200)} kg CO₂
+            ~{Math.floor(150 + Math.random() * 200)} kg CO₂
+          </Typography>
+          <Typography variant="caption" color="text.secondary" sx={{ fontSize: '0.55rem' }}>
+            estimated
           </Typography>
         </Box>
 
@@ -619,9 +630,9 @@ const FlightCard = ({ flight, dictionaries }) => {
           {isSelected ? 'Selected' : 'Select'}
         </Button>
 
-        {/* Baggage Info */}
+        {/* Baggage Info - From API */}
         <Box sx={{ mt: 2, width: '100%' }}>
-          {baggageInfo.carryOn && (
+          {fareInfo.carryOn && (
             <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5, mb: 0.5 }}>
               <Typography sx={{ fontSize: '14px' }}>🧳</Typography>
               <Typography variant="caption" color="text.secondary">
@@ -629,12 +640,12 @@ const FlightCard = ({ flight, dictionaries }) => {
               </Typography>
             </Box>
           )}
-          {baggageInfo.checkedBags > 0 ? (
+          {fareInfo.checkedBags > 0 ? (
             <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5, mb: 0.5 }}>
               <Typography sx={{ fontSize: '14px' }}>✅</Typography>
               <Typography variant="caption" color="success.main" fontWeight={600}>
-                {baggageInfo.checkedBags} checked bag{baggageInfo.checkedBags > 1 ? 's' : ''} 
-                {baggageInfo.checkedWeight && ` (${baggageInfo.checkedWeight})`}
+                {fareInfo.checkedBags} checked bag{fareInfo.checkedBags > 1 ? 's' : ''} 
+                {fareInfo.checkedWeight && ` (${fareInfo.checkedWeight})`}
               </Typography>
             </Box>
           ) : (
@@ -653,30 +664,39 @@ const FlightCard = ({ flight, dictionaries }) => {
           </Box>
         </Box>
 
-        {/* Fare Tags */}
+        {/* Fare Info - From API */}
         <Box sx={{ mt: 2, display: 'flex', flexWrap: 'wrap', gap: 0.5, justifyContent: 'center' }}>
+          {/* Cabin Class - FROM API */}
           <Chip
-            label="Flexible"
+            label={fareInfo.cabin.replace('_', ' ')}
             size="small"
             sx={{
               fontSize: '0.6rem',
               height: 20,
-              bgcolor: alpha(theme.palette.success.main, 0.1),
-              color: 'success.main',
+              bgcolor: fareInfo.cabin === 'BUSINESS' || fareInfo.cabin === 'FIRST' 
+                ? alpha(theme.palette.warning.main, 0.15)
+                : alpha(theme.palette.primary.main, 0.1),
+              color: fareInfo.cabin === 'BUSINESS' || fareInfo.cabin === 'FIRST'
+                ? 'warning.main'
+                : 'primary.main',
               fontWeight: 600,
+              textTransform: 'capitalize',
             }}
           />
-          <Chip
-            label="Refundable"
-            size="small"
-            sx={{
-              fontSize: '0.6rem',
-              height: 20,
-              bgcolor: alpha(theme.palette.info.main, 0.1),
-              color: 'info.main',
-              fontWeight: 600,
-            }}
-          />
+          {/* Branded Fare - FROM API (if available) */}
+          {fareInfo.brandedFare && (
+            <Chip
+              label={fareInfo.brandedFare}
+              size="small"
+              sx={{
+                fontSize: '0.6rem',
+                height: 20,
+                bgcolor: alpha(theme.palette.info.main, 0.1),
+                color: 'info.main',
+                fontWeight: 600,
+              }}
+            />
+          )}
         </Box>
       </Box>
     </Box>

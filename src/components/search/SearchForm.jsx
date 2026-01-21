@@ -14,8 +14,7 @@ import {
   CircularProgress,
   Typography,
 } from '@mui/material';
-import AddIcon from '@mui/icons-material/Add';
-import DeleteOutlineIcon from '@mui/icons-material/DeleteOutline';
+
 import { useTheme, alpha } from '@mui/material/styles';
 import { DatePicker } from '@mui/x-date-pickers/DatePicker';
 import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
@@ -71,37 +70,7 @@ const SearchForm = () => {
     });
   };
   
-  // Multi-city flight legs
-  const [multiCityLegs, setMultiCityLegs] = useState([
-    { origin: null, destination: null, date: dayjs().add(7, 'day').format('YYYY-MM-DD') },
-    { origin: null, destination: null, date: dayjs().add(10, 'day').format('YYYY-MM-DD') },
-  ]);
 
-  const addFlightLeg = () => {
-    if (multiCityLegs.length < 6) {
-      const lastLeg = multiCityLegs[multiCityLegs.length - 1];
-      setMultiCityLegs([
-        ...multiCityLegs,
-        { 
-          origin: lastLeg.destination, 
-          destination: null, 
-          date: dayjs(lastLeg.date).add(3, 'day').format('YYYY-MM-DD') 
-        },
-      ]);
-    }
-  };
-
-  const removeFlightLeg = (index) => {
-    if (multiCityLegs.length > 2) {
-      setMultiCityLegs(multiCityLegs.filter((_, i) => i !== index));
-    }
-  };
-
-  const updateFlightLeg = (index, field, value) => {
-    setMultiCityLegs(multiCityLegs.map((leg, i) => 
-      i === index ? { ...leg, [field]: value } : leg
-    ));
-  };
 
   const validateForm = () => {
     const newErrors = {};
@@ -196,280 +165,141 @@ const SearchForm = () => {
           >
             <ToggleButton value="roundTrip">✈️ Round Trip</ToggleButton>
             <ToggleButton value="oneWay">🛫 One Way</ToggleButton>
-            <ToggleButton value="multiCity">🌍 Multi-city</ToggleButton>
           </ToggleButtonGroup>
         </Box>
 
-        {/* Multi-city Form */}
-        {searchParams.tripType === 'multiCity' ? (
-          <Box sx={{ position: 'relative', zIndex: 1 }}>
-            {multiCityLegs.map((leg, index) => (
-              <Box
-                key={index}
-                sx={{
-                  display: 'grid',
-                  gridTemplateColumns: isMobile ? '1fr' : '1fr 1fr 1fr auto',
-                  gap: 1.5,
-                  mb: 2,
-                  alignItems: 'center',
-                }}
-              >
-                {/* Flight number badge */}
-                <Box sx={{ gridColumn: isMobile ? '1' : 'auto', display: 'flex', alignItems: 'center', gap: 1 }}>
-                  <Box
-                    sx={{
-                      width: 28,
-                      height: 28,
-                      borderRadius: '50%',
-                      bgcolor: 'primary.main',
-                      color: 'white',
-                      display: 'flex',
-                      alignItems: 'center',
-                      justifyContent: 'center',
-                      fontWeight: 700,
-                      fontSize: '0.75rem',
-                    }}
-                  >
-                    {index + 1}
-                  </Box>
-                  
-                  {/* FROM */}
-                  <Box
-                    sx={{
-                      flex: 1,
-                      pt: 1,
-              pb: 1,
-              pl: 2.5,
-              pr: 1.5,
-                      borderRadius: 2,
-                      bgcolor: alpha(theme.palette.background.paper, 0.6),
-                      border: '1px solid',
-                      borderColor: 'divider',
-                    }}
-                  >
-                    <Typography variant="caption" color="text.secondary" fontWeight={500} sx={{ fontSize: '0.65rem' }}>
-                      FROM
-                    </Typography>
-                    <AirportAutocomplete
-                      value={leg.origin}
-                      onChange={(value) => updateFlightLeg(index, 'origin', value)}
-                      placeholder="City or airport"
-                      type="origin"
-                      minimal
-                    />
-                  </Box>
-                </Box>
-
-                {/* TO */}
-                <Box
-                  sx={{
-                    pt: 1,
-              pb: 1,
-              pl: 2.5,
-              pr: 1.5,
-                    borderRadius: 2,
-                    bgcolor: alpha(theme.palette.background.paper, 0.6),
-                    border: '1px solid',
-                    borderColor: 'divider',
-                  }}
-                >
-                  <Typography variant="caption" color="text.secondary" fontWeight={500} sx={{ fontSize: '0.65rem' }}>
-                    TO
-                  </Typography>
-                  <AirportAutocomplete
-                    value={leg.destination}
-                    onChange={(value) => updateFlightLeg(index, 'destination', value)}
-                    placeholder="City or airport"
-                    type="destination"
-                    minimal
-                  />
-                </Box>
-
-                {/* DATE */}
-                <Box
-                  sx={{
-                    pt: 1,
-              pb: 1,
-              pl: 2.5,
-              pr: 1.5,
-                    borderRadius: 2,
-                    bgcolor: alpha(theme.palette.background.paper, 0.6),
-                    border: '1px solid',
-                    borderColor: 'divider',
-                  }}
-                >
-                  <Typography variant="caption" color="text.secondary" fontWeight={500} sx={{ fontSize: '0.65rem' }}>
-                    DATE
-                  </Typography>
-                  <DatePicker
-                    value={leg.date ? dayjs(leg.date) : null}
-                    onChange={(date) => updateFlightLeg(index, 'date', date ? date.format('YYYY-MM-DD') : null)}
-                    minDate={index > 0 && multiCityLegs[index - 1].date ? dayjs(multiCityLegs[index - 1].date) : dayjs()}
-                    slotProps={{
-                      textField: {
-                        variant: 'standard',
-                        fullWidth: true,
-                        InputProps: { disableUnderline: true },
-                        sx: { '& input': { fontWeight: 600, fontSize: '0.95rem' } },
-                      },
-                    }}
-                  />
-                </Box>
-
-                {/* Remove button */}
-                {multiCityLegs.length > 2 && (
-                  <IconButton
-                    onClick={() => removeFlightLeg(index)}
-                    sx={{
-                      color: 'error.main',
-                      '&:hover': { bgcolor: alpha(theme.palette.error.main, 0.1) },
-                    }}
-                  >
-                    <DeleteOutlineIcon />
-                  </IconButton>
-                )}
-              </Box>
-            ))}
-
-            {/* Add flight button */}
-            {multiCityLegs.length < 6 && (
-              <Button
-                variant="outlined"
-                startIcon={<AddIcon />}
-                onClick={addFlightLeg}
-                sx={{
-                  borderStyle: 'dashed',
-                  color: 'primary.main',
-                  borderColor: 'primary.main',
-                  mb: 2,
-                  '&:hover': {
-                    borderStyle: 'dashed',
-                    bgcolor: alpha(theme.palette.primary.main, 0.05),
-                  },
-                }}
-              >
-                Add another flight
-              </Button>
-            )}
-          </Box>
-        ) : (
-        /* Main Search Grid - Round Trip / One Way */
+        {/* Main Search Grid - Round Trip / One Way */}
         <Box
           sx={{
             display: 'grid',
             gridTemplateColumns: isMobile 
               ? '1fr' 
               : searchParams.tripType === 'roundTrip'
-                ? '1fr auto 1fr 1fr 1fr'  // 5 columns for round trip
-                : '1.2fr auto 1.2fr 1fr',  // 4 columns for one way (wider FROM/TO)
+                ? '2fr 1fr 1fr'  // FROM+TO combined, DEPARTURE, RETURN
+                : '2fr 1fr',  // FROM+TO combined, DEPARTURE only
             gap: 1.5,
-            alignItems: 'center',
+            alignItems: 'stretch',
             position: 'relative',
             zIndex: 1,
           }}
         >
-          {/* FROM Card */}
+          {/* FROM + SWAP + TO Combined Card */}
           <Box
             sx={{
-              pt: 1,
-              pb: 1,
-              pl: 2.5,
-              pr: 1.5,
+              display: 'flex',
+              alignItems: 'stretch',
               borderRadius: 2,
               bgcolor: alpha(theme.palette.background.paper, 0.6),
               border: '1px solid',
-              borderColor: errors.origin ? 'error.main' : 'divider',
+              borderColor: (errors.origin || errors.destination) ? 'error.main' : 'divider',
+              overflow: 'visible',
               transition: 'all 0.3s ease',
+              position: 'relative',
               '&:hover': {
                 borderColor: 'primary.main',
-                boxShadow: `0 0 0 2px ${alpha(theme.palette.primary.main, 0.2)}`,
-              },
-              '&:focus-within': {
-                borderColor: 'primary.main',
-                boxShadow: `0 0 0 3px ${alpha(theme.palette.primary.main, 0.3)}`,
               },
             }}
           >
-            <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5, mb: 0.25 }}>
-              <FlightTakeoffIcon sx={{ fontSize: 14, color: 'primary.main' }} />
-              <Typography variant="caption" color="text.secondary" fontWeight={500} sx={{ fontSize: '0.65rem' }}>
-                FROM
-              </Typography>
-            </Box>
-            <AirportAutocomplete
-              value={searchParams.origin}
-              onChange={(value) => {
-                updateSearchParams({ origin: value });
-                setErrors((prev) => ({ ...prev, origin: null }));
-              }}
-              placeholder="City or airport"
-              type="origin"
-              error={errors.origin}
-              minimal
-            />
-          </Box>
-
-          {/* Swap Button */}
-          <Tooltip title="Swap locations" arrow>
-            <IconButton
-              onClick={handleSwap}
+            {/* FROM Section */}
+            <Box
               sx={{
-                width: 40,
-                height: 40,
-                bgcolor: 'primary.main',
-                color: 'white',
-                boxShadow: '0 4px 14px rgba(99, 102, 241, 0.4)',
-                '&:hover': {
-                  bgcolor: 'primary.dark',
-                  transform: 'rotate(180deg) scale(1.1)',
+                flex: 1,
+                pt: 1,
+                pb: 1,
+                pl: 2.5,
+                pr: 3,
+                '&:focus-within': {
+                  bgcolor: alpha(theme.palette.primary.main, 0.05),
                 },
-                transition: 'all 0.4s ease',
-                mx: isMobile ? 'auto' : 0,
               }}
             >
-              <SwapHorizIcon sx={{ transform: isMobile ? 'rotate(90deg)' : 'none', fontSize: 20 }} />
-            </IconButton>
-          </Tooltip>
-
-          {/* TO Card */}
-          <Box
-            sx={{
-              pt: 1,
-              pb: 1,
-              pl: 2.5,
-              pr: 1.5,
-              borderRadius: 2,
-              bgcolor: alpha(theme.palette.background.paper, 0.6),
-              border: '1px solid',
-              borderColor: errors.destination ? 'error.main' : 'divider',
-              transition: 'all 0.3s ease',
-              '&:hover': {
-                borderColor: 'primary.main',
-                boxShadow: `0 0 0 2px ${alpha(theme.palette.primary.main, 0.2)}`,
-              },
-              '&:focus-within': {
-                borderColor: 'primary.main',
-                boxShadow: `0 0 0 3px ${alpha(theme.palette.primary.main, 0.3)}`,
-              },
-            }}
-          >
-            <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5, mb: 0.25 }}>
-              <FlightLandIcon sx={{ fontSize: 14, color: 'secondary.main' }} />
-              <Typography variant="caption" color="text.secondary" fontWeight={500} sx={{ fontSize: '0.65rem' }}>
-                TO
-              </Typography>
+              <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5, mb: 0.25 }}>
+                <FlightTakeoffIcon sx={{ fontSize: 14, color: 'primary.main' }} />
+                <Typography variant="caption" color="text.secondary" fontWeight={500} sx={{ fontSize: '0.65rem' }}>
+                  FROM
+                </Typography>
+              </Box>
+              <AirportAutocomplete
+                value={searchParams.origin}
+                onChange={(value) => {
+                  updateSearchParams({ origin: value });
+                  setErrors((prev) => ({ ...prev, origin: null }));
+                }}
+                placeholder="City or airport"
+                type="origin"
+                error={errors.origin}
+                minimal
+              />
             </Box>
-            <AirportAutocomplete
-              value={searchParams.destination}
-              onChange={(value) => {
-                updateSearchParams({ destination: value });
-                setErrors((prev) => ({ ...prev, destination: null }));
+
+            {/* Center Divider Line */}
+            <Box
+              sx={{
+                width: '1px',
+                bgcolor: 'divider',
+                my: 1,
               }}
-              placeholder="City or airport"
-              type="destination"
-              error={errors.destination}
-              minimal
             />
+
+            {/* Swap Button - Absolutely Positioned on the Wall */}
+            <Tooltip title="Swap locations" arrow>
+              <IconButton
+                onClick={handleSwap}
+                sx={{
+                  position: 'absolute',
+                  left: '50%',
+                  top: '50%',
+                  transform: 'translate(-50%, -50%)',
+                  width: 38,
+                  height: 38,
+                  bgcolor: 'primary.main',
+                  color: 'white',
+                  border: '3px solid',
+                  borderColor: theme.palette.mode === 'dark' ? 'rgba(30, 41, 59, 1)' : 'white',
+                  boxShadow: '0 2px 12px rgba(99, 102, 241, 0.5)',
+                  zIndex: 10,
+                  '&:hover': {
+                    bgcolor: 'primary.dark',
+                    transform: 'translate(-50%, -50%) rotate(180deg)',
+                  },
+                  transition: 'all 0.3s ease',
+                }}
+              >
+                <SwapHorizIcon sx={{ fontSize: 18 }} />
+              </IconButton>
+            </Tooltip>
+
+            {/* TO Section */}
+            <Box
+              sx={{
+                flex: 1,
+                pt: 1,
+                pb: 1,
+                pl: 3,
+                pr: 2.5,
+                '&:focus-within': {
+                  bgcolor: alpha(theme.palette.primary.main, 0.05),
+                },
+              }}
+            >
+              <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5, mb: 0.25 }}>
+                <FlightLandIcon sx={{ fontSize: 14, color: 'secondary.main' }} />
+                <Typography variant="caption" color="text.secondary" fontWeight={500} sx={{ fontSize: '0.65rem' }}>
+                  TO
+                </Typography>
+              </Box>
+              <AirportAutocomplete
+                value={searchParams.destination}
+                onChange={(value) => {
+                  updateSearchParams({ destination: value });
+                  setErrors((prev) => ({ ...prev, destination: null }));
+                }}
+                placeholder="City or airport"
+                type="destination"
+                error={errors.destination}
+                minimal
+              />
+            </Box>
           </Box>
 
           {/* Departure Date Card */}
@@ -518,9 +348,9 @@ const SearchForm = () => {
             <Box
               sx={{
                 pt: 1,
-              pb: 1,
-              pl: 2.5,
-              pr: 1.5,
+                pb: 1,
+                pl: 2.5,
+                pr: 1.5,
                 borderRadius: 2,
                 bgcolor: alpha(theme.palette.background.paper, 0.6),
                 border: '1px solid',
@@ -556,78 +386,89 @@ const SearchForm = () => {
             </Box>
           )}
         </Box>
-        )}
 
         {/* Bottom Row - Passengers, Class, Search */}
         <Box
           sx={{
             display: 'grid',
-            gridTemplateColumns: isMobile ? '1fr' : '1fr 1fr 1fr auto',
+            gridTemplateColumns: isMobile 
+              ? '1fr' 
+              : searchParams.tripType === 'roundTrip'
+                ? '2fr 1fr 1fr'  // Match top row: Travelers+Class combined, then Search spans 2 cols
+                : '2fr 1fr',
             gap: 1.5,
-            mt: 2,
+            mt: 1.5,
             alignItems: 'stretch',
             position: 'relative',
             zIndex: 1,
           }}
         >
-          {/* Passengers Card */}
+          {/* Travelers + Class Combined Card */}
           <Box
             sx={{
-              pt: 1,
-              pb: 1,
-              pl: 2.5,
-              pr: 1.5,
+              display: 'flex',
+              alignItems: 'stretch',
               borderRadius: 2,
               bgcolor: alpha(theme.palette.background.paper, 0.6),
               border: '1px solid',
               borderColor: 'divider',
+              overflow: 'hidden',
             }}
           >
-            <Typography variant="caption" color="text.secondary" fontWeight={500} sx={{ mb: 0.25, display: 'block', fontSize: '0.65rem' }}>
-              👥 TRAVELERS
-            </Typography>
-            <PassengerSelector
-              passengers={searchParams.passengers}
-              onUpdate={updatePassengers}
-              minimal
-            />
-          </Box>
-
-          {/* Class Selector */}
-          <Box
-            sx={{
-              pt: 1,
-              pb: 1,
-              pl: 2.5,
-              pr: 1.5,
-              borderRadius: 2,
-              bgcolor: alpha(theme.palette.background.paper, 0.6),
-              border: '1px solid',
-              borderColor: 'divider',
-            }}
-          >
-            <Typography variant="caption" color="text.secondary" fontWeight={500} sx={{ mb: 0.25, display: 'block', fontSize: '0.65rem' }}>
-              💺 CLASS
-            </Typography>
-            <TextField
-              select
-              value={searchParams.travelClass}
-              onChange={(e) => updateSearchParams({ travelClass: e.target.value })}
-              variant="standard"
-              fullWidth
-              InputProps={{ disableUnderline: true }}
-              sx={{ '& .MuiSelect-select': { fontWeight: 600 } }}
+            {/* Travelers Section */}
+            <Box
+              sx={{
+                flex: 1,
+                pt: 1,
+                pb: 1,
+                pl: 2.5,
+                pr: 1.5,
+              }}
             >
-              {TRAVEL_CLASSES.map((option) => (
-                <MenuItem key={option.value} value={option.value}>
-                  {option.label}
-                </MenuItem>
-              ))}
-            </TextField>
+              <Typography variant="caption" color="text.secondary" fontWeight={500} sx={{ mb: 0.25, display: 'flex', alignItems: 'center', gap: 0.5, fontSize: '0.65rem' }}>
+                👥 TRAVELERS
+              </Typography>
+              <PassengerSelector
+                passengers={searchParams.passengers}
+                onUpdate={updatePassengers}
+                minimal
+              />
+            </Box>
+
+            {/* Class Section */}
+            <Box
+              sx={{
+                flex: 1,
+                pt: 1,
+                pb: 1,
+                pl: 1.5,
+                pr: 2.5,
+                borderLeft: '1px solid',
+                borderColor: 'divider',
+              }}
+            >
+              <Typography variant="caption" color="text.secondary" fontWeight={500} sx={{ mb: 0.25, display: 'flex', alignItems: 'center', gap: 0.5, fontSize: '0.65rem' }}>
+                💺 CLASS
+              </Typography>
+              <TextField
+                select
+                value={searchParams.travelClass}
+                onChange={(e) => updateSearchParams({ travelClass: e.target.value })}
+                variant="standard"
+                fullWidth
+                InputProps={{ disableUnderline: true }}
+                sx={{ '& .MuiSelect-select': { fontWeight: 600 } }}
+              >
+                {TRAVEL_CLASSES.map((option) => (
+                  <MenuItem key={option.value} value={option.value}>
+                    {option.label}
+                  </MenuItem>
+                ))}
+              </TextField>
+            </Box>
           </Box>
 
-
-          {/* SEARCH BUTTON - Prominent */}
+          {/* SEARCH BUTTON - Spans remaining columns */}
           <Button
             variant="contained"
             size="large"
@@ -635,37 +476,30 @@ const SearchForm = () => {
             disabled={isLoading}
             startIcon={
               isLoading ? (
-                <CircularProgress size={22} color="inherit" />
+                <CircularProgress size={20} color="inherit" />
               ) : (
-                <SearchIcon sx={{ fontSize: 24 }} />
+                <SearchIcon sx={{ fontSize: 22 }} />
               )
             }
             sx={{
-              height: 50,
+              gridColumn: isMobile ? 'auto' : (searchParams.tripType === 'roundTrip' ? 'span 2' : 'auto'),
+              height: '100%',
+              minHeight: 56,
               px: 4,
-              py: 1.5,
-              my: 0,
-              minWidth: 200,
-              fontSize: '1.1rem',
+              fontSize: '1rem',
               fontWeight: 700,
               borderRadius: 2,
-              background: 'linear-gradient(135deg, #6366f1 0%, #8b5cf6 50%, #06b6d4 100%)',
-              backgroundSize: '200% 200%',
-              animation: 'gradient 3s ease infinite',
-              boxShadow: '0 8px 32px rgba(99, 102, 241, 0.4)',
-              '@keyframes gradient': {
-                '0%': { backgroundPosition: '0% 50%' },
-                '50%': { backgroundPosition: '100% 50%' },
-                '100%': { backgroundPosition: '0% 50%' },
-              },
+              background: 'linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%)',
+              boxShadow: '0 4px 20px rgba(99, 102, 241, 0.35)',
               '&:hover': {
-                transform: 'translateY(-3px) scale(1.02)',
-                boxShadow: '0 12px 40px rgba(99, 102, 241, 0.5)',
+                background: 'linear-gradient(135deg, #5558e8 0%, #7c4fed 100%)',
+                boxShadow: '0 6px 28px rgba(99, 102, 241, 0.5)',
+                transform: 'translateY(-2px)',
               },
               '&:active': {
                 transform: 'translateY(0)',
               },
-              transition: 'all 0.3s ease',
+              transition: 'all 0.25s ease',
             }}
           >
             {isLoading ? 'Searching...' : 'Search Flights'}
@@ -685,7 +519,7 @@ const SearchForm = () => {
                 '&:hover': { color: 'primary.main' },
               }}
             >
-              Flexible dates? See price calendar
+              Flexible dates & Live Price Graphs
             </Button>
           </Box>
         )}

@@ -204,3 +204,5 @@ MIT License - feel free to use this project as a reference.
 ---
 
 Built with ❤️ for the Spotter AI coding challenge
+Author: Taimoor Raza Asif
+Email: taimoorrazaasif581@gmail.com

@@ -3,7 +3,7 @@
 import { Box } from '@mui/material';
 import { alpha } from '@mui/material/styles';
 
-// Airport positions - moved higher
+// Airport positions
 const airports = [
   { id: 'A', x: 5, y: 15 },
   { id: 'B', x: 20, y: 45 },
@@ -17,7 +17,7 @@ const airports = [
   { id: 'J', x: 55, y: 50 },
 ];
 
-// Flight paths - moved higher (reduced Y values)
+// Flight paths
 const flightPaths = [
   // LEFT TO RIGHT flights
   {

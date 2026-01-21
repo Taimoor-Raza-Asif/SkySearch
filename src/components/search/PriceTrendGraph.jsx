@@ -36,7 +36,6 @@ const PriceTrendGraph = ({
     const daysInMonth = currentMonth.daysInMonth();
     const data = [];
 
-    // Add a few days from previous month for context? No, just keep it simple for now.
     
     for (let i = 0; i < daysInMonth; i++) {
         const date = startOfMonth.add(i, 'day');
@@ -58,10 +57,7 @@ const PriceTrendGraph = ({
 
   // Custom Tick for X Axis
   const CustomXAxisTick = ({ x, y, payload }) => {
-      // payload.value is the index or formatted value
-      // We want to show Flight Icon for selected date, or date otherwise?
-      // Google flights shows flight icons on the axis for selected dates.
-      // For now, let's just show dates sparingly.
+
       return (
           <g transform={`translate(${x},${y})`}>
               <text x={0} y={0} dy={16} textAnchor="middle" fill="#666" fontSize={10}>
@@ -131,24 +127,34 @@ const PriceTrendGraph = ({
       </Box>
 
       {/* Chart */}
-      <Box sx={{ flex: 1, minHeight: 400, width: '100%' }}>
+      <Box sx={{ flex: 1, minHeight: 350, width: '100%' }}>
         <ResponsiveContainer width="100%" height="100%">
             <BarChart
                 data={chartData}
-                margin={{ top: 20, right: 30, left: 20, bottom: 20 }}
+                margin={{ top: 20, right: 30, left: 20, bottom: 40 }}
                 barGap={2}
             >
-                {/* Background Grid Lines similar to Google Flights */}
                 <CartesianGrid strokeDasharray="3 3" vertical={false} stroke={alpha(theme.palette.text.disabled, 0.2)} />
                 
+                {/* X Axis - Dates */}
+                <XAxis 
+                    dataKey="day"
+                    axisLine={false}
+                    tickLine={false}
+                    tick={{ fill: theme.palette.text.secondary, fontSize: 10 }}
+                    interval={2}
+                />
+
                 {/* Y Axis - Price Levels */}
                 <YAxis 
                     axisLine={false}
                     tickLine={false}
                     tick={{ fill: theme.palette.text.secondary, fontSize: 11 }}
                     tickFormatter={(value) => `$${value}`}
-                    domain={[0, 'auto']}
-                    allowDataOverflow={true} // Allow scaling
+                    domain={[
+                      (dataMin) => Math.max(0, Math.floor(dataMin * 0.9)), 
+                      (dataMax) => Math.ceil(dataMax * 1.1)
+                    ]}
                 />
 
                 <Tooltip content={<CustomTooltip />} cursor={{ fill: alpha(theme.palette.primary.main, 0.1) }} />
@@ -157,7 +163,7 @@ const PriceTrendGraph = ({
                 <Bar 
                     dataKey="price" 
                     minPointSize={5} 
-                    radius={[2, 2, 0, 0]}
+                    radius={[3, 3, 0, 0]}
                     onClick={(data) => {
                         if (data.hasPrice) {
                             onSelectDate(data.date);
@@ -171,10 +177,6 @@ const PriceTrendGraph = ({
                         let fillColor = theme.palette.primary.main;
                         if (isSelected) fillColor = theme.palette.primary.dark;
                         else if (isCheap) fillColor = theme.palette.success.light;
-                        
-                        // Google flight style: Blue bars, grey for null?
-                        // Actually Google Flights uses blue bars. 
-                        // Selected bar is highlighted.
                         
                         return (
                             <Cell 
@@ -193,7 +195,6 @@ const PriceTrendGraph = ({
         </ResponsiveContainer>
       </Box>
       
-      {/* Axis Labels / Flight Icons could go here manually if Recharts XAxis feels too limited */}
     </Box>
   );
 };

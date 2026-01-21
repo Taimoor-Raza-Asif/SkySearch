@@ -23,7 +23,7 @@ const AirportAutocomplete = ({
   type = 'origin', // 'origin' or 'destination'
   error,
   disabled = false,
-  minimal = false, // New minimal mode for modern design
+  minimal = false, 
 }) => {
   const [inputValue, setInputValue] = useState('');
   const [options, setOptions] = useState(popularAirports);
@@ -71,7 +71,6 @@ const AirportAutocomplete = ({
     return <FlightLandIcon sx={{ color: 'secondary.main', mr: 1 }} />;
   };
 
-  // Minimal mode - cleaner look for new design
   if (minimal) {
     return (
       <Autocomplete

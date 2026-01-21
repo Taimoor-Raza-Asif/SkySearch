@@ -1,5 +1,4 @@
 // Price Graph Component - Real-time price visualization
-// Implements: Live updates on filter changes (key requirement)
 import { useMemo, useState, useCallback } from 'react';
 import {
   Box,

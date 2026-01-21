@@ -1,4 +1,4 @@
-// Home Page - Modern aesthetic with stunning hero section
+// Home Page
 import { useState } from 'react';
 import { Box, Container, Typography, useMediaQuery, Chip, Switch, FormControlLabel, Collapse, Stack } from '@mui/material';
 import { useTheme, alpha } from '@mui/material/styles';
@@ -20,7 +20,6 @@ const HomePage = () => {
 
   return (
     <MainLayout>
-      {/* HERO SECTION - Stunning Modern Design */}
       <Box
         sx={{
           minHeight: hasSearched ? 'auto' : { xs: 'auto', md: 'auto' },

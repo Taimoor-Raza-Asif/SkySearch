@@ -14,7 +14,9 @@ import {
   CircularProgress,
   Chip,
   Tabs,
-  Tab
+  Tab,
+  useMediaQuery,
+  Slide
 } from '@mui/material';
 import { useTheme, alpha } from '@mui/material/styles';
 import ChevronLeftIcon from '@mui/icons-material/ChevronLeft';
@@ -23,6 +25,12 @@ import CalendarViewMonthIcon from '@mui/icons-material/CalendarViewMonth';
 import CloseIcon from '@mui/icons-material/Close';
 import dayjs from 'dayjs';
 import PriceTrendGraph from './PriceTrendGraph';
+import React from 'react';
+
+// Slide transition for mobile
+const Transition = React.forwardRef(function Transition(props, ref) {
+  return <Slide direction="up" ref={ref} {...props} />;
+});
 
 const FlexibleDatesCalendar = ({ 
   open, 
@@ -33,10 +41,37 @@ const FlexibleDatesCalendar = ({
   tripType = 'roundTrip' 
 }) => {
   const theme = useTheme();
+  const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
   const [currentMonth, setCurrentMonth] = useState(dayjs());
   const [selectedDeparture, setSelectedDeparture] = useState(departureDate ? dayjs(departureDate) : null);
   const [selectedReturn, setSelectedReturn] = useState(returnDate ? dayjs(returnDate) : null);
+  // null = manual mode, number = chip-based auto mode
   const [tripDuration, setTripDuration] = useState(7);
+  const [isChipSelected, setIsChipSelected] = useState(true); // Track if using chip mode
+
+  // Calculate actual duration between selected dates
+  const actualDuration = useMemo(() => {
+    if (selectedDeparture && selectedReturn) {
+      return selectedReturn.diff(selectedDeparture, 'day');
+    }
+    return tripDuration;
+  }, [selectedDeparture, selectedReturn, tripDuration]);
+
+  // Handle chip click - toggle selection
+  const handleChipClick = (days) => {
+    if (isChipSelected && tripDuration === days) {
+      // Clicking the same chip again deselects it (enable manual mode)
+      setIsChipSelected(false);
+    } else {
+      // Select this chip (enable chip mode)
+      setIsChipSelected(true);
+      setTripDuration(days);
+      // If departure is already selected, auto-set return based on new duration
+      if (selectedDeparture) {
+        setSelectedReturn(selectedDeparture.add(days, 'day'));
+      }
+    }
+  };
 
   // Generate mock prices for demo (in real app, would fetch from API)
   const generatePrices = useMemo(() => {
@@ -131,8 +166,12 @@ const FlexibleDatesCalendar = ({
     
     if (tripType === 'oneWay') {
       setSelectedDeparture(day.date);
+    } else if (isChipSelected) {
+      // Chip mode: clicking any date sets departure, return auto-calculated
+      setSelectedDeparture(day.date);
+      setSelectedReturn(day.date.add(tripDuration, 'day'));
     } else {
-      // Round trip: first click = departure, second = return
+      // Manual mode: first click = departure, second = return
       if (!selectedDeparture || (selectedDeparture && selectedReturn)) {
         setSelectedDeparture(day.date);
         setSelectedReturn(null);
@@ -183,116 +222,179 @@ const FlexibleDatesCalendar = ({
       onClose={onClose} 
       maxWidth="md" 
       fullWidth
+      fullScreen={isMobile}
+      TransitionComponent={isMobile ? Transition : undefined}
       PaperProps={{
         sx: { 
-          borderRadius: 3,
-          height: '80vh', // Fixed height for consistency
-          maxHeight: 800
+          borderRadius: isMobile ? 0 : 3,
+          height: isMobile ? '100%' : '80vh',
+          maxHeight: isMobile ? '100%' : 800,
         }
       }}
     >
+      {/* Header */}
       <Box sx={{ borderBottom: 1, borderColor: 'divider' }}>
-        <DialogTitle sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', pb: 0 }}>
+        <DialogTitle sx={{ 
+          display: 'flex', 
+          alignItems: 'center', 
+          justifyContent: 'space-between', 
+          pb: 0,
+          px: isMobile ? 2 : 3,
+          pt: isMobile ? 1.5 : 2,
+        }}>
           <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-            <CalendarViewMonthIcon color="primary" />
+            <CalendarViewMonthIcon color="primary" sx={{ fontSize: isMobile ? 24 : 28 }} />
             <Box>
-              <Typography variant="h6" fontWeight={700}>
+              <Typography variant={isMobile ? 'subtitle1' : 'h6'} fontWeight={700}>
                 Flexible Dates
               </Typography>
-              <Typography variant="caption" color="text.secondary">
-                Compare prices by date
-              </Typography>
+              {!isMobile && (
+                <Typography variant="caption" color="text.secondary">
+                  & Live Price Graphs
+                </Typography>
+              )}
             </Box>
           </Box>
-          <IconButton onClick={onClose} edge="end">
+          <IconButton onClick={onClose} edge="end" size={isMobile ? 'medium' : 'large'}>
             <CloseIcon />
           </IconButton>
         </DialogTitle>
-        <Tabs value={view} onChange={handleViewChange} sx={{ px: 3 }}>
-          <Tab label="Dates" />
-          <Tab label="Price graph" />
+        <Tabs 
+          value={view} 
+          onChange={handleViewChange} 
+          sx={{ px: isMobile ? 2 : 3 }}
+          variant={isMobile ? 'fullWidth' : 'standard'}
+        >
+          <Tab label="Dates" sx={{ fontSize: isMobile ? '0.85rem' : undefined }} />
+          <Tab label="Price Graph" sx={{ fontSize: isMobile ? '0.85rem' : undefined }} />
         </Tabs>
       </Box>
       
-      <DialogContent sx={{ display: 'flex', flexDirection: 'column', p: 3 }}>
-        {/* Shared Controls: Trip Duration (for Round Trip) & Month Nav */}
-        <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
-           {/* Trip Duration - Only show in Grid view or let Graph handle its own? 
-               Google Layout: Graph view has duration controls inside it. 
-               Grid view has duration chips.
-           */}
-           {view === 0 && tripType === 'roundTrip' ? (
-             <Box sx={{ display: 'flex', gap: 1, flexWrap: 'wrap' }}>
-               {[3, 5, 7, 10, 14, 21].map((days) => (
-                <Chip
-                  key={days}
-                  label={`${days} days`}
-                  onClick={() => setTripDuration(days)}
-                  sx={{
-                    bgcolor: tripDuration === days ? 'primary.main' : 'action.hover',
-                    color: tripDuration === days ? 'white' : 'text.primary',
-                    fontWeight: 600,
-                    '&:hover': {
-                      bgcolor: tripDuration === days ? 'primary.dark' : 'action.selected',
-                    },
-                  }}
-                />
-              ))}
-             </Box>
-           ) : <Box />} {/* Spacer */}
-
-           {/* Month Navigation - Shared */}
-           <Box sx={{ display: 'flex', alignItems: 'center' }}>
-            <IconButton 
-              onClick={() => setCurrentMonth(currentMonth.subtract(1, 'month'))}
-              disabled={currentMonth.isSame(dayjs(), 'month')}
-            >
-              <ChevronLeftIcon />
-            </IconButton>
-            <Typography variant="h6" fontWeight={600} sx={{ mx: 2, minWidth: 140, textAlign: 'center' }}>
-              {currentMonth.format('MMMM YYYY')}
-            </Typography>
-            <IconButton onClick={() => setCurrentMonth(currentMonth.add(1, 'month'))}>
-              <ChevronRightIcon />
-            </IconButton>
-          </Box>
+      <DialogContent sx={{ 
+        display: 'flex', 
+        flexDirection: 'column', 
+        p: isMobile ? 2 : 3,
+        overflow: 'auto',
+        minHeight: 400,
+      }}>
+        {/* Month Navigation - Always at top */}
+        <Box sx={{ 
+          display: 'flex', 
+          justifyContent: 'center', 
+          alignItems: 'center', 
+          mb: isMobile ? 1.5 : 2,
+        }}>
+          <IconButton 
+            onClick={() => setCurrentMonth(currentMonth.subtract(1, 'month'))}
+            disabled={currentMonth.isSame(dayjs(), 'month')}
+            size={isMobile ? 'small' : 'medium'}
+          >
+            <ChevronLeftIcon />
+          </IconButton>
+          <Typography 
+            variant={isMobile ? 'subtitle1' : 'h6'} 
+            fontWeight={600} 
+            sx={{ mx: isMobile ? 1 : 2, minWidth: isMobile ? 120 : 140, textAlign: 'center' }}
+          >
+            {currentMonth.format('MMMM YYYY')}
+          </Typography>
+          <IconButton 
+            onClick={() => setCurrentMonth(currentMonth.add(1, 'month'))}
+            size={isMobile ? 'small' : 'medium'}
+          >
+            <ChevronRightIcon />
+          </IconButton>
         </Box>
+
+        {/* Trip Duration Chips - Only for Dates view & Round Trip */}
+        {view === 0 && tripType === 'roundTrip' && (
+          <Box sx={{ 
+            display: 'flex', 
+            gap: 0.75, 
+            mb: isMobile ? 1.5 : 2,
+            overflowX: 'auto',
+            pb: 1,
+            px: 0.5,
+            justifyContent: isMobile ? 'flex-start' : 'center',
+            '&::-webkit-scrollbar': { height: 4 },
+            '&::-webkit-scrollbar-thumb': { bgcolor: 'divider', borderRadius: 2 },
+          }}>
+            {[3, 5, 7, 10, 14, 21].map((days) => (
+              <Chip
+                key={days}
+                label={`${days} days`}
+                onClick={() => handleChipClick(days)}
+                size={isMobile ? 'small' : 'medium'}
+                sx={{
+                  flexShrink: 0,
+                  bgcolor: isChipSelected && tripDuration === days ? 'primary.main' : 'action.hover',
+                  color: isChipSelected && tripDuration === days ? 'white' : 'text.primary',
+                  fontWeight: 600,
+                  fontSize: isMobile ? '0.75rem' : '0.875rem',
+                  border: !isChipSelected ? '1px dashed' : 'none',
+                  borderColor: !isChipSelected ? 'text.secondary' : 'transparent',
+                  '&:hover': {
+                    bgcolor: isChipSelected && tripDuration === days ? 'primary.dark' : 'action.selected',
+                  },
+                }}
+              />
+            ))}
+          </Box>
+        )}
 
         {view === 0 ? (
           /* DATES VIEW (GRID) */
           <>
-            {/* Price Legend */}
-            <Box sx={{ display: 'flex', gap: 2, mb: 2, justifyContent: 'center' }}>
+            {/* Price Legend - Compact on mobile */}
+            <Box sx={{ 
+              display: 'flex', 
+              gap: isMobile ? 1.5 : 2, 
+              mb: isMobile ? 1 : 2, 
+              justifyContent: 'center' 
+            }}>
               <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
-                <Box sx={{ width: 12, height: 12, borderRadius: 0.5, bgcolor: alpha(theme.palette.success.main, 0.3) }} />
-                <Typography variant="caption">Low</Typography>
+                <Box sx={{ width: 10, height: 10, borderRadius: 0.5, bgcolor: alpha(theme.palette.success.main, 0.3) }} />
+                <Typography variant="caption" sx={{ fontSize: isMobile ? '0.65rem' : undefined }}>Low</Typography>
               </Box>
               <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
-                <Box sx={{ width: 12, height: 12, borderRadius: 0.5, bgcolor: alpha(theme.palette.warning.main, 0.3) }} />
-                <Typography variant="caption">Medium</Typography>
+                <Box sx={{ width: 10, height: 10, borderRadius: 0.5, bgcolor: alpha(theme.palette.warning.main, 0.3) }} />
+                <Typography variant="caption" sx={{ fontSize: isMobile ? '0.65rem' : undefined }}>Medium</Typography>
               </Box>
               <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
-                <Box sx={{ width: 12, height: 12, borderRadius: 0.5, bgcolor: alpha(theme.palette.error.main, 0.3) }} />
-                <Typography variant="caption">High</Typography>
+                <Box sx={{ width: 10, height: 10, borderRadius: 0.5, bgcolor: alpha(theme.palette.error.main, 0.3) }} />
+                <Typography variant="caption" sx={{ fontSize: isMobile ? '0.65rem' : undefined }}>High</Typography>
               </Box>
             </Box>
 
-            {/* Calendar Grid */}
-            <Box sx={{ display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)', gap: 0.5, overflowY: 'auto' }}>
-              {['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'].map((day) => (
-                <Box key={day} sx={{ textAlign: 'center', py: 1 }}>
-                  <Typography variant="caption" fontWeight={600} color="text.secondary">
+            {/* Calendar Grid - Responsive */}
+            <Box sx={{ 
+              display: 'grid', 
+              gridTemplateColumns: 'repeat(7, 1fr)', 
+              gap: isMobile ? 0.25 : 0.5, 
+              overflowY: 'auto',
+              flex: 1,
+            }}>
+              {/* Day headers */}
+              {(isMobile ? ['S', 'M', 'T', 'W', 'T', 'F', 'S'] : ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat']).map((day, i) => (
+                <Box key={i} sx={{ textAlign: 'center', py: isMobile ? 0.5 : 1 }}>
+                  <Typography 
+                    variant="caption" 
+                    fontWeight={600} 
+                    color="text.secondary"
+                    sx={{ fontSize: isMobile ? '0.7rem' : undefined }}
+                  >
                     {day}
                   </Typography>
                 </Box>
               ))}
 
+              {/* Calendar days */}
               {calendarDays.map((day, index) => (
                 <Box
                   key={index}
                   onClick={() => handleDateClick(day)}
                   sx={{
-                    p: 1,
+                    p: isMobile ? 0.5 : 1,
                     borderRadius: 1,
                     textAlign: 'center',
                     cursor: day.date && !day.isPast ? 'pointer' : 'default',
@@ -305,9 +407,17 @@ const FlexibleDatesCalendar = ({
                     borderColor: isSelected(day.date) ? 'primary.main' : 'transparent',
                     opacity: day.isPast ? 0.4 : 1,
                     transition: 'all 0.2s',
+                    minHeight: isMobile ? 44 : 56,
+                    display: 'flex',
+                    flexDirection: 'column',
+                    justifyContent: 'center',
+                    alignItems: 'center',
                     '&:hover': day.date && !day.isPast ? {
-                      transform: 'scale(1.05)',
-                      boxShadow: 2,
+                      transform: isMobile ? 'none' : 'scale(1.05)',
+                      boxShadow: isMobile ? 1 : 2,
+                    } : {},
+                    '&:active': day.date && !day.isPast ? {
+                      transform: 'scale(0.95)',
                     } : {},
                   }}
                 >
@@ -317,6 +427,7 @@ const FlexibleDatesCalendar = ({
                         variant="body2" 
                         fontWeight={600}
                         color={isSelected(day.date) ? 'white' : 'text.primary'}
+                        sx={{ fontSize: isMobile ? '0.85rem' : undefined, lineHeight: 1.2 }}
                       >
                         {day.date.date()}
                       </Typography>
@@ -324,9 +435,10 @@ const FlexibleDatesCalendar = ({
                         <Typography 
                           variant="caption" 
                           sx={{ 
-                            fontSize: '0.65rem',
+                            fontSize: isMobile ? '0.55rem' : '0.65rem',
                             color: isSelected(day.date) ? 'rgba(255,255,255,0.8)' : getPriceTextColor(day.price),
                             fontWeight: 600,
+                            lineHeight: 1,
                           }}
                         >
                           ${day.price}
@@ -358,27 +470,50 @@ const FlexibleDatesCalendar = ({
         )}
       </DialogContent>
       
-      <DialogActions sx={{ p: 2, borderTop: '1px solid', borderColor: 'divider' }}>
-        <Box sx={{ flex: 1, pl: 2 }}>
+      {/* Footer - Responsive */}
+      <DialogActions sx={{ 
+        p: isMobile ? 1.5 : 2, 
+        borderTop: '1px solid', 
+        borderColor: 'divider',
+        flexDirection: isMobile ? 'column' : 'row',
+        gap: isMobile ? 1 : 0,
+        alignItems: 'stretch',
+      }}>
+        {/* Selection info */}
+        <Box sx={{ flex: 1, pl: isMobile ? 0 : 2, textAlign: isMobile ? 'center' : 'left' }}>
             {(selectedDeparture || selectedReturn) && (
-                <Typography variant="body2">
+                <Typography variant="body2" sx={{ fontSize: isMobile ? '0.85rem' : undefined }}>
                     Selected: <b>{selectedDeparture?.format('MMM D')}</b>
                     {selectedReturn && <> - <b>{selectedReturn?.format('MMM D')}</b></>}
                     {' '}
-                    ({tripDuration} days)
+                    ({actualDuration} days)
                 </Typography>
             )}
         </Box>
-        <Button onClick={onClose} color="inherit">
-          Cancel
-        </Button>
-        <Button 
-          variant="contained" 
-          onClick={handleConfirm}
-          disabled={!selectedDeparture || (tripType === 'roundTrip' && !selectedReturn)}
-        >
-          Done
-        </Button>
+        
+        {/* Buttons */}
+        <Box sx={{ 
+          display: 'flex', 
+          gap: 1, 
+          justifyContent: isMobile ? 'stretch' : 'flex-end',
+          width: isMobile ? '100%' : 'auto',
+        }}>
+          <Button 
+            onClick={onClose} 
+            color="inherit"
+            sx={{ flex: isMobile ? 1 : 'none' }}
+          >
+            Cancel
+          </Button>
+          <Button 
+            variant="contained" 
+            onClick={handleConfirm}
+            disabled={!selectedDeparture || (tripType === 'roundTrip' && !selectedReturn)}
+            sx={{ flex: isMobile ? 1 : 'none' }}
+          >
+            Done
+          </Button>
+        </Box>
       </DialogActions>
     </Dialog>
   );
