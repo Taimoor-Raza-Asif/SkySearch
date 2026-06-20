@@ -160,7 +160,7 @@ const HomePage = () => {
           {!hasSearched && (
             <Box
               sx={{
-                display: 'flex',
+                display: { xs: 'none', md: 'flex' },
                 justifyContent: 'center',
                 gap: { xs: 2, md: 4 },
                 mt: 4,
@@ -222,9 +222,10 @@ const HomePage = () => {
               {/* Control Bar: Price Graph Toggle & Sort */}
               {filteredFlights.length > 0 && (
                 <Stack 
-                  direction="row" 
+                  direction={{ xs: 'column', sm: 'row' }} 
                   justifyContent="space-between" 
-                  alignItems="center" 
+                  alignItems={{ xs: 'stretch', sm: 'center' }} 
+                  spacing={1.5}
                   sx={{ mb: 2 }}
                 >
                   <FormControlLabel
@@ -241,7 +242,7 @@ const HomePage = () => {
                       </Typography>
                     }
                   />
-                  <SortDropdown />
+                  <SortDropdown sx={{ width: { xs: '100%', sm: 180 } }} />
                 </Stack>
               )}
 

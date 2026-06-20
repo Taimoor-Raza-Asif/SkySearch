@@ -139,17 +139,23 @@ const SearchForm = () => {
             exclusive
             onChange={(e, value) => value && updateSearchParams({ tripType: value })}
             sx={{
+              width: '100%',
+              display: 'flex',
+              flexWrap: 'wrap',
               bgcolor: alpha(theme.palette.primary.main, 0.1),
               borderRadius: 3,
               p: 0.5,
               '& .MuiToggleButton-root': {
                 border: 'none',
                 borderRadius: 2.5,
-                px: 4,
+                flex: '1 1 0',
+                minWidth: 0,
+                px: { xs: 1.5, sm: 4 },
                 py: 1,
                 textTransform: 'none',
                 fontWeight: 600,
-                fontSize: '0.95rem',
+                fontSize: { xs: '0.78rem', sm: '0.95rem' },
+                whiteSpace: 'nowrap',
                 color: 'text.secondary',
                 transition: 'all 0.3s ease',
                 '&.Mui-selected': {
@@ -187,12 +193,13 @@ const SearchForm = () => {
           <Box
             sx={{
               display: 'flex',
+              flexDirection: { xs: 'column', md: 'row' },
               alignItems: 'stretch',
               borderRadius: 2,
               bgcolor: alpha(theme.palette.background.paper, 0.6),
               border: '1px solid',
               borderColor: (errors.origin || errors.destination) ? 'error.main' : 'divider',
-              overflow: 'visible',
+              overflow: 'hidden',
               transition: 'all 0.3s ease',
               position: 'relative',
               '&:hover': {
@@ -204,10 +211,10 @@ const SearchForm = () => {
             <Box
               sx={{
                 flex: 1,
-                pt: 1,
-                pb: 1,
-                pl: 2.5,
-                pr: 3,
+                pt: { xs: 1.5, md: 1 },
+                pb: { xs: 1.5, md: 1 },
+                pl: { xs: 2, md: 2.5 },
+                pr: { xs: 2, md: 3 },
                 '&:focus-within': {
                   bgcolor: alpha(theme.palette.primary.main, 0.05),
                 },
@@ -235,9 +242,10 @@ const SearchForm = () => {
             {/* Center Divider Line */}
             <Box
               sx={{
-                width: '1px',
+                width: { xs: '100%', md: '1px' },
+                height: { xs: '1px', md: 'auto' },
                 bgcolor: 'divider',
-                my: 1,
+                my: { xs: 0, md: 1 },
               }}
             />
 
@@ -246,10 +254,12 @@ const SearchForm = () => {
               <IconButton
                 onClick={handleSwap}
                 sx={{
-                  position: 'absolute',
-                  left: '50%',
-                  top: '50%',
-                  transform: 'translate(-50%, -50%)',
+                  position: { xs: 'static', md: 'absolute' },
+                  left: { md: '50%' },
+                  top: { md: '50%' },
+                  transform: { xs: 'none', md: 'translate(-50%, -50%)' },
+                  mx: { xs: 'auto', md: 0 },
+                  my: { xs: -1.5, md: 0 },
                   width: 38,
                   height: 38,
                   bgcolor: 'primary.main',
@@ -273,10 +283,10 @@ const SearchForm = () => {
             <Box
               sx={{
                 flex: 1,
-                pt: 1,
-                pb: 1,
-                pl: 3,
-                pr: 2.5,
+                pt: { xs: 1.5, md: 1 },
+                pb: { xs: 1.5, md: 1 },
+                pl: { xs: 2, md: 3 },
+                pr: { xs: 2, md: 2.5 },
                 '&:focus-within': {
                   bgcolor: alpha(theme.palette.primary.main, 0.05),
                 },
@@ -407,6 +417,7 @@ const SearchForm = () => {
           <Box
             sx={{
               display: 'flex',
+              flexDirection: { xs: 'column', md: 'row' },
               alignItems: 'stretch',
               borderRadius: 2,
               bgcolor: alpha(theme.palette.background.paper, 0.6),
@@ -419,10 +430,10 @@ const SearchForm = () => {
             <Box
               sx={{
                 flex: 1,
-                pt: 1,
-                pb: 1,
-                pl: 2.5,
-                pr: 1.5,
+                pt: { xs: 1.5, md: 1 },
+                pb: { xs: 1.5, md: 1 },
+                pl: { xs: 2, md: 2.5 },
+                pr: { xs: 2, md: 1.5 },
               }}
             >
               <Typography variant="caption" color="text.secondary" fontWeight={500} sx={{ mb: 0.25, display: 'flex', alignItems: 'center', gap: 0.5, fontSize: '0.65rem' }}>
@@ -439,11 +450,12 @@ const SearchForm = () => {
             <Box
               sx={{
                 flex: 1,
-                pt: 1,
-                pb: 1,
-                pl: 1.5,
-                pr: 2.5,
-                borderLeft: '1px solid',
+                pt: { xs: 1.5, md: 1 },
+                pb: { xs: 1.5, md: 1 },
+                pl: { xs: 2, md: 1.5 },
+                pr: { xs: 2, md: 2.5 },
+                borderTop: { xs: '1px solid', md: 'none' },
+                borderLeft: { xs: 'none', md: '1px solid' },
                 borderColor: 'divider',
               }}
             >
@@ -483,9 +495,10 @@ const SearchForm = () => {
             }
             sx={{
               gridColumn: isMobile ? 'auto' : (searchParams.tripType === 'roundTrip' ? 'span 2' : 'auto'),
+              width: { xs: '100%', md: 'auto' },
               height: '100%',
               minHeight: 56,
-              px: 4,
+              px: { xs: 2.5, md: 4 },
               fontSize: '1rem',
               fontWeight: 700,
               borderRadius: 2,

@@ -3,7 +3,7 @@ import { MenuItem, TextField } from '@mui/material';
 import { useSearchContext } from '../../contexts/SearchContext';
 import { SORT_OPTIONS } from '../../utils/constants';
 
-const SortDropdown = () => {
+const SortDropdown = ({ sx = {} }) => {
   const { filters, updateFilters } = useSearchContext();
 
   return (
@@ -13,7 +13,7 @@ const SortDropdown = () => {
       onChange={(e) => updateFilters({ sortBy: e.target.value })}
       label="Sort by"
       size="small"
-      sx={{ minWidth: 180 }}
+      sx={{ minWidth: 180, ...sx }}
     >
       {SORT_OPTIONS.map((option) => (
         <MenuItem key={option.value} value={option.value}>

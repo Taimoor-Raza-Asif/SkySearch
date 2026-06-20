@@ -52,16 +52,16 @@ const Header = () => {
       }}
     >
       <Container maxWidth="xl">
-        <Toolbar sx={{ justifyContent: 'space-between', px: { xs: 0 }, minHeight: 70 }}>
+        <Toolbar sx={{ justifyContent: 'space-between', px: { xs: 0 }, minHeight: { xs: 64, sm: 70 }, gap: { xs: 1, sm: 2 } }}>
           {/* Logo */}
-          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: { xs: 1, sm: 1.5 }, minWidth: 0 }}>
             <Box
               component="img"
               src="/skySearchLogo.png"
               alt="SkySearch Logo"
               sx={{
-                width: 44,
-                height: 44,
+                width: { xs: 36, sm: 44 },
+                height: { xs: 36, sm: 44 },
                 borderRadius: 2.5,
                 objectFit: 'contain',
                 transition: 'transform 0.3s ease',
@@ -105,15 +105,15 @@ const Header = () => {
           </Box>
 
           {/* Right Side Icons */}
-          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: { xs: 0.5, sm: 1 } }}>
             
             {/* Help Icon */}
             <Tooltip title="Help & Info" arrow>
               <IconButton 
                 onClick={(e) => setHelpAnchor(e.currentTarget)}
                 sx={{ 
-                  width: 40,
-                  height: 40,
+                  width: { xs: 36, sm: 40 },
+                  height: { xs: 36, sm: 40 },
                   color: 'text.secondary',
                   '&:hover': { 
                     bgcolor: alpha(theme.palette.primary.main, 0.1),
@@ -191,8 +191,8 @@ const Header = () => {
               <IconButton 
                 onClick={(e) => setMobileAnchor(e.currentTarget)}
                 sx={{ 
-                  width: 40,
-                  height: 40,
+                  width: { xs: 36, sm: 40 },
+                  height: { xs: 36, sm: 40 },
                   color: 'text.secondary',
                   '&:hover': { 
                     bgcolor: alpha(theme.palette.success.main, 0.1),
@@ -258,8 +258,8 @@ const Header = () => {
             <IconButton 
               onClick={toggleTheme}
               sx={{ 
-                width: 44,
-                height: 44,
+                width: { xs: 38, sm: 44 },
+                height: { xs: 38, sm: 44 },
                 bgcolor: alpha(theme.palette.primary.main, 0.1),
                 '&:hover': { 
                   bgcolor: alpha(theme.palette.primary.main, 0.2),
